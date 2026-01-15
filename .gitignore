@@ -1,0 +1,13 @@
+# Local environment secrets
+env
+.env
+.env.*
+.DS_Store
+.venv/
+env
+env.sh
+trades.db
+logs/
+*_export.csv
+__pycache__/
+*.pyc
