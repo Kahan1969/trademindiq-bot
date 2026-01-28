@@ -810,7 +810,6 @@ class TelegramBot:
         routes = self._get_routes()
         fn = routes.get(key)
         if not fn:
-            self._send_text_with_menu(f"Unknown command: {t}\nType: /trademindiq for menu")
             return
         fn()
     
