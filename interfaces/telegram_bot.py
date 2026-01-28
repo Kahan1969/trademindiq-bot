@@ -142,45 +142,6 @@ class TelegramBot:
                     pass
             pass
 
-    def _get_custom_keyboard(self) -> dict:
-        """Return custom reply keyboard with all commands."""
-        return {
-            "keyboard": [
-                [
-                    {"text": "📊 Stats"},
-                    {"text": "📜 Past Trades"},
-                    {"text": "📌 Open Trades"}
-                ],
-                [
-                    {"text": "🧠 AI Review"},
-                    {"text": "⚙️ AI Optimize"},
-                    {"text": "🗓️ Daily"}
-                ],
-                [
-                    {"text": "📆 Weekly"},
-                    {"text": "📋 Paper"},
-                    {"text": "🚀 Live"}
-                ],
-                [
-                    {"text": "🎯 Strict"},
-                    {"text": "🔓 Loose"},
-                    {"text": "📈 Ticker"}
-                ],
-                [
-                    {"text": "🟢 Buy"},
-                    {"text": "🔴 Sell"},
-                    {"text": "⏸️ Pause"}
-                ],
-                [
-                    {"text": "▶️ Resume"},
-                    {"text": "🤖 Status"},
-                    {"text": "🏠 Menu"}
-                ]
-            ],
-            "resize_keyboard": True,
-            "one_time_keyboard": False,
-        }
-
     def _get_menu_keyboard(self) -> dict:
         """Return the inline keyboard for the main menu."""
         return {
@@ -284,22 +245,66 @@ class TelegramBot:
             self._send_text(text)
 
     def send_menu(self) -> None:
-        """Send custom keyboard menu - alias for send_dashboard."""
+        """Send HTML keyboard in message body."""
         self.send_dashboard()
 
     def send_dashboard(self) -> None:
-        """Send custom keyboard with all commands."""
-        import json
-        keyboard = self._get_custom_keyboard()
+        """Send custom HTML keyboard in message body."""
+        keyboard_buttons = [
+            {"text": "📊 Stats", "color": "#FF6B6B", "cmd": "/stats"},
+            {"text": "📜 Past Trades", "color": "#4ECDC4", "cmd": "/past trades"},
+            {"text": "📌 Open Trades", "color": "#45B7D1", "cmd": "/open trades"},
+            {"text": "🧠 AI Review", "color": "#96CEB4", "cmd": "/ai review"},
+            {"text": "⚙️ AI Optimize", "color": "#DDA0DD", "cmd": "/ai optimize"},
+            {"text": "🗓️ Daily", "color": "#FFB347", "cmd": "/daily"},
+            {"text": "📆 Weekly", "color": "#DDA0DD", "cmd": "/weekly"},
+            {"text": "📋 Paper", "color": "#F7DC6F", "cmd": "/paper"},
+            {"text": "🚀 Live", "color": "#E74C3C", "cmd": "/live"},
+            {"text": "🎯 Strict", "color": "#4ECDC4", "cmd": "/strict"},
+            {"text": "🔓 Loose", "color": "#FFB347", "cmd": "/loose"},
+            {"text": "📈 Ticker", "color": "#45B7D1", "cmd": "/ticker"},
+            {"text": "🟢 Buy", "color": "#2ECC71", "cmd": "/one-tap buy"},
+            {"text": "🔴 Sell", "color": "#E74C3C", "cmd": "/one-tap sell"},
+            {"text": "⏸️ Pause", "color": "#636E72", "cmd": "/pause"},
+            {"text": "▶️ Resume", "color": "#2ECC71", "cmd": "/resume"},
+            {"text": "🤖 Status", "color": "#45B7D1", "cmd": "/status"},
+            {"text": "🏠 Menu", "color": "#636E72", "cmd": "/trademindiq"},
+        ]
+        
+        # Build 3-column grid
+        rows = [keyboard_buttons[i:i+3] for i in range(0, len(keyboard_buttons), 3)]
+        
+        buttons_html = ""
+        for row in rows:
+            buttons_html += '<div style="display:flex;gap:8px;margin-bottom:8px;">'
+            for btn in row:
+                buttons_html += f'''<a href="/{btn['cmd'].replace('/', '')}" style="
+                    display:inline-block;
+                    padding:12px 20px;
+                    background:{btn['color']};
+                    color:white;
+                    text-decoration:none;
+                    border-radius:8px;
+                    font-weight:bold;
+                    text-align:center;
+                    flex:1;
+                    box-shadow:0 2px 4px rgba(0,0,0,0.2);
+                ">{btn['text']}</a>'''
+            buttons_html += '</div>'
+        
+        html = f"""<b>📊 TradeMindIQ Control Center</b>
+
+{buttons_html}
+
+<i>Tap any button to execute command</i>"""
         
         try:
             r = requests.get(
                 f"{self.base}/sendMessage",
                 params={
                     "chat_id": self.chat_id,
-                    "text": "📊 <b>TradeMindIQ Control Center</b>\n\nSelect an option:",
+                    "text": html,
                     "parse_mode": "HTML",
-                    "reply_markup": json.dumps(keyboard)
                 },
                 timeout=10,
             )
