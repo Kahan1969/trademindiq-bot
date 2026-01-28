@@ -1251,6 +1251,46 @@ class TelegramBot:
         self._send_text("\n".join(lines))
 
     # -----------------------------
+    # Removed/Disabled Handlers (stubs - redirect to /stats)
+    # -----------------------------
+    def send_ai_optimize(self) -> None:
+        """AI Optimize - Use /stats for performance data."""
+        self._send_text_with_menu("⚙️ AI Optimize: Use /stats for performance data.")
+    
+    def send_daily_summary(self) -> None:
+        """Daily Summary - Use /stats for performance data."""
+        self._send_text_with_menu("🗓️ Daily Summary: Use /stats for performance data.")
+    
+    def send_weekly_summary(self) -> None:
+        """Weekly Summary - Use /stats for performance data."""
+        self._send_text_with_menu("📆 Weekly Summary: Use /stats for performance data.")
+    
+    def set_mode(self, mode: str) -> None:
+        """Mode toggle - Use /paper or /live commands."""
+        self._send_text_with_menu(f"Mode: {mode.upper()}. Use /paper or /live commands.")
+    
+    def set_strictness(self, level: str) -> None:
+        """Strictness toggle - Use /strict or /loose commands."""
+        self._send_text_with_menu(f"Strictness: {level.upper()}. Use /strict or /loose commands.")
+    
+    def one_tap_buy(self) -> None:
+        """One-Tap BUY - Use /open trades to view positions."""
+        self._send_text_with_menu("🟢 One-Tap BUY: Use /open trades to view positions.")
+    
+    def one_tap_sell(self) -> None:
+        """One-Tap SELL - Use /open trades to view positions."""
+        self._send_text_with_menu("🔴 One-Tap SELL: Use /open trades to view positions.")
+    
+    def start_live_ticker(self, symbols: List[str] = None, interval: int = 5) -> None:
+        """Live Ticker - Use /stats for current prices."""
+        self._send_text_with_menu("📈 Live Ticker: Use /stats for current price data.")
+    
+    def stop_live_ticker(self) -> None:
+        """Stop Live Ticker."""
+        self._send_text_with_menu("ℹ️ Ticker not active. Use /stats for prices.")
+
+    # -----------------------------
+    # Polling mechanism
     # -----------------------------
     def _poll_loop(self) -> None:
         """Background thread that polls Telegram for updates."""
