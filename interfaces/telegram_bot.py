@@ -764,14 +764,21 @@ class TelegramBot:
             "ai review": self.send_ai_review,
             "ai optimize": self.send_ai_optimize,
             "daily": self.send_daily_summary,
+            "daily summary": self.send_daily_summary,
             "weekly": self.send_weekly_summary,
+            "weekly summary": self.send_weekly_summary,
             "paper": lambda: self.set_mode("paper"),
             "live": lambda: self.set_mode("live"),
+            "mode paper": lambda: self.set_mode("paper"),
+            "mode live": lambda: self.set_mode("live"),
             "strict": lambda: self.set_strictness("strict"),
             "loose": lambda: self.set_strictness("loose"),
+            "ticker": self.start_live_ticker,
+            "price": self.start_live_ticker,
+            "one-tap buy": self.one_tap_buy,
+            "one-tap sell": self.one_tap_sell,
             "pause": self.pause_scanner,
             "resume": self.resume_scanner,
-            "ticker": self.start_live_ticker,
         }
         
         fn = routes.get(key)
