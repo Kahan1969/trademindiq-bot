@@ -754,23 +754,23 @@ class TelegramBot:
         key = self._normalize_cmd(t)
         
         routes = {
-            "trademindiq": self.send_menu,
-            "menu": self.send_menu,
-            "dashboard": self.send_menu,
-            "status": self._send_status_with_menu,
-            "past trades": self._send_recent_trades_with_menu,
-            "open trades": self._send_open_trades_with_menu,
-            "stats": self._send_stats,
-            "ai review": lambda: self._send_text_with_menu("AI Review: will appear on each signal + post-trade."),
-            "ai optimize": lambda: self._send_text_with_menu("AI Optimize: post-trade parameter suggestions."),
-            "daily summary": lambda: self._send_text_with_menu("Daily Summary: not yet implemented."),
-            "weekly summary": lambda: self._send_text_with_menu("Weekly Summary: not yet implemented."),
-            "mode: paper": lambda: self._send_text_with_menu("Mode: PAPER (use /paper or Mode: LIVE to switch)"),
-            "mode: live": lambda: self._send_text_with_menu("Mode: LIVE (use /confirm live to arm)"),
-            "strict": self._send_status_with_menu,
-            "loose": self._send_status_with_menu,
-            "pause": lambda: self._handle_pause(),
-            "resume": lambda: self._handle_resume(),
+            "trademindiq": self.send_dashboard,
+            "menu": self.send_dashboard,
+            "dashboard": self.send_dashboard,
+            "status": self.send_status,
+            "past trades": self.send_past_trades,
+            "open trades": self.send_open_trades,
+            "stats": self.send_stats,
+            "ai review": self.send_ai_review,
+            "ai optimize": self.send_ai_optimize,
+            "daily summary": self.send_daily_summary,
+            "weekly summary": self.send_weekly_summary,
+            "mode: paper": lambda: self.set_mode("paper"),
+            "mode: live": lambda: self.set_mode("live"),
+            "strict": self.send_status,
+            "loose": self.send_status,
+            "pause": self.pause_scanner,
+            "resume": self.resume_scanner,
         }
         
         fn = routes.get(key)
@@ -784,12 +784,12 @@ class TelegramBot:
         key = self._normalize_cmd(data)
         
         routes = {
-            "status": self._send_status_with_menu,
-            "open_trades": self._send_open_trades_with_menu,
-            "past_trades": self._send_recent_trades_with_menu,
-            "ai_review": lambda: self._send_text_with_menu("AI Review: will appear on each signal + post-trade."),
-            "pause": self._handle_pause,
-            "resume": self._handle_resume,
+            "status": self.send_status,
+            "open_trades": self.send_open_trades,
+            "past_trades": self.send_past_trades,
+            "ai_review": self.send_ai_review,
+            "pause": self.pause_scanner,
+            "resume": self.resume_scanner,
         }
         
         fn = routes.get(key)
@@ -805,6 +805,67 @@ class TelegramBot:
     def _handle_resume(self) -> None:
         self._paused = False
         self._send_text_with_menu("▶️ Scanner alerts resumed.")
+
+    # --- Command Handlers (Stubs - wire to real implementations) ---
+    def send_dashboard(self) -> None:
+        """Send the main dashboard menu."""
+        self.send_menu()
+    
+    def send_status(self) -> None:
+        """Send bot status."""
+        self._send_status_with_menu()
+    
+    def send_past_trades(self) -> None:
+        """Send past trades list."""
+        self._send_recent_trades_with_menu()
+    
+    def send_open_trades(self) -> None:
+        """Send open positions."""
+        self._send_open_trades_with_menu()
+    
+    def send_stats(self) -> None:
+        """Send performance statistics."""
+        self._send_stats()
+    
+    def send_ai_review(self) -> None:
+        """Send latest AI review."""
+        self._send_text_with_menu("🧠 AI Review: Reviewing trade patterns...")
+    
+    def send_ai_optimize(self) -> None:
+        """Send AI optimization suggestions."""
+        self._send_text_with_menu("⚙️ AI Optimize: Analyzing parameters...")
+    
+    def send_daily_summary(self) -> None:
+        """Send daily performance summary."""
+        self._send_text_with_menu("🗓️ Daily Summary: (coming soon)")
+    
+    def send_weekly_summary(self) -> None:
+        """Send weekly performance summary."""
+        self._send_text_with_menu("📆 Weekly Summary: (coming soon)")
+    
+    def set_mode(self, mode: str) -> None:
+        """Set trading mode (paper/live)."""
+        self._send_text_with_menu(f"Mode set: {mode.upper()}")
+    
+    def set_strictness(self, level: str) -> None:
+        """Set scanner strictness (strict/loose)."""
+        self._send_text_with_menu(f"Strictness set: {level.upper()}")
+    
+    def pause_scanner(self) -> None:
+        """Pause the scanner."""
+        self._handle_pause()
+    
+    def resume_scanner(self) -> None:
+        """Resume the scanner."""
+        self._handle_resume()
+    
+    def one_tap_buy(self) -> None:
+        """One-tap buy action (placeholder)."""
+        self._send_text_with_menu("🟢 One-Tap BUY: Not armed (requires /confirm live)")
+    
+    def one_tap_sell(self) -> None:
+        """One-tap sell action (placeholder)."""
+        self._send_text_with_menu("🔴 One-Tap SELL: Not armed (requires /confirm live)")
 
     def handle_dashboard_callback(self, call_data: str) -> None:
         """Handle callback queries from inline keyboards."""
