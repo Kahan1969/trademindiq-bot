@@ -1,0 +1,18 @@
+# TradeMindIQ Dashboard Requirements
+# Deploy to Streamlit Cloud
+
+# Core
+streamlit>=1.28.0
+plotly>=5.18.0
+pandas>=2.0.0
+matplotlib>=3.7.0
+
+# Data & Analysis
+numpy>=1.24.0
+scipy>=1.11.0
+
+# Database
+sqlite3 (built-in)
+
+# Optional: For full functionality
+# pip install -r requirements.txt

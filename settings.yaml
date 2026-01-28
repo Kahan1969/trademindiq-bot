@@ -1,0 +1,158 @@
+# Execution routing for adapters that support live trading
+trading:
+  mode: "paper"   # "paper" or "live"
+
+# Exchange selection:
+# - For CCXT exchanges keep this as a string (e.g. "kucoin")
+# - For BTCC integration switch to the object form below.
+exchange: kucoin
+# exchange:
+#   name: BTCC
+#   type: futures
+
+# BTCC REST credentials (only used when exchange.name == BTCC)
+# Keep real values local; do not commit secrets.
+# btcc:
+#   base_url: "https://api1.btloginc.com:9081"
+#   user_name: "YOUR_BTCC_LOGIN"
+#   password: "YOUR_BTCC_PASSWORD"
+#   api_key: "BTCC_API_KEY"
+#   secret_key: "BTCC_SECRET_KEY"
+#   company_id: 1
+#   qty_mode: "native"          # native | notional_usd
+#   contract_value_usd: 1.0      # used when qty_mode=notional_usd and contracts are USD-settled
+
+
+timeframe: 1m
+
+symbols:
+  - BTC/USDT
+  - ETH/USDT
+  - SOL/USDT
+  - BNB/USDT
+  - XRP/USDT
+  - ADA/USDT
+  - DOGE/USDT
+  - TON/USDT
+  - TRX/USDT
+  - AVAX/USDT
+  - LINK/USDT
+  - LTC/USDT
+  - BCH/USDT
+  - MATIC/USDT
+  - DOT/USDT
+  - UNI/USDT
+  - INJ/USDT
+  - APT/USDT
+  - OP/USDT
+  - ARB/USDT
+  - SUI/USDT
+  - RUNE/USDT
+  - SEI/USDT
+  - NEAR/USDT
+  - AAVE/USDT
+  - STX/USDT
+  - FIL/USDT
+  - PEPE/USDT
+  - WIF/USDT
+  - JUP/USDT
+
+equity: 500
+risk_usd_per_trade: 50      # 0.10% per trade
+r_multiple: 2.0           # scalping target
+min_rel_vol: 2.0
+min_gap_pct: 0.15
+
+# Warrior-style micro filters
+breakout_lookback: 12
+min_body_pct: 0.55         # body / range
+max_upper_wick_pct: 0.35
+min_vol_spike: 1.8         # current vol / vol_ma20
+
+# Order-flow gates (crypto Level2/Tape equivalent)
+orderflow:
+  enabled: true
+  min_bid_ask_ratio: 1.25
+  book_depth: 8
+  min_buy_sell_ratio: 1.15
+  tape_trades: 60
+
+# Trade management
+trade_mgmt:
+  max_hold_seconds: 999999    # 3 min max hold
+  cooldown_seconds: 90
+  max_open_positions: 2
+  daily_loss_cap: 25.0
+
+# Top movers rotation (subset size used each run)
+top_movers:
+  count: 20
+
+telegram:
+  format: "legacy"        # legacy | compact
+  include_chart: true
+  include_news: true
+  include_sentiment: true
+  bot_token: "YOUR_TELEGRAM_BOT_TOKEN"
+  chat_id: "YOUR_CHAT_ID"
+  heartbeat:
+    enabled: true
+    startup: true
+    interval_minutes: 10
+
+ai:
+  enabled: true
+  db_path: "trades.db"
+
+universes:
+  equities_us:
+    enabled: true
+    broker: alpaca
+    symbols: ["SPY", "QQQ", "NVDA", "TSLA", "AAPL"]
+    timeframe: 1m
+    session: us_open_2h
+    max_signals_per_window: 3
+
+  crypto:
+    enabled: true
+    symbols: ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
+    timeframe: 1m
+    session: always
+
+  forex:
+    enabled: false
+    symbols: ["EUR/USD", "GBP/USD"]
+    session: "london_ny_overlap"
+    timeframe: "1m"
+
+alpaca:
+  trading_mode: paper            # paper | live
+  base_url_paper: "https://paper-api.alpaca.markets"
+  base_url_live: "https://api.alpaca.markets"
+  data_base_url: "https://data.alpaca.markets"
+  api_key: "ENV:ALPACA_API_KEY"
+  secret_key: "ENV:ALPACA_SECRET_KEY"
+  feed: "iex"                    # depends on your plan; keep configurable
+
+news:
+  enabled: true
+  min_impact_to_attach: 0.65
+  window_minutes: 90
+  max_items_per_symbol: 3
+
+  providers:
+    cryptopanic:
+      enabled: true
+      token: "ENV:CRYPTOPANIC_TOKEN"
+      filter: "hot"         # hot | trending | latest (provider dependent)
+      languages: "en"
+
+    rss:
+      enabled: true
+      feeds:
+        - name: "CoinDesk"
+          url: "https://www.coindesk.com/arc/outboundfeeds/rss/"
+        - name: "Cointelegraph"
+          url: "https://cointelegraph.com/rss"
+        - name: "Decrypt"
+          url: "https://decrypt.co/feed"

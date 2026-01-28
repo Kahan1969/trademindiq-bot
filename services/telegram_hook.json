@@ -1,0 +1,43 @@
+{
+  "name": "trademindiq-dashboard",
+  "version": "1.0.0",
+  "description": "TradeMindIQ Telegram Dashboard for Clawdbot",
+  "hooks": {
+    "telegram": {
+      "commands": [
+        {
+          "command": "trademindiq",
+          "description": "Open TradeMindIQ trading bot dashboard",
+          "handler": "trademindiq_hook"
+        },
+        {
+          "command": "portfolio",
+          "description": "View current trading positions",
+          "handler": "portfolio_hook"
+        },
+        {
+          "command": "analytics",
+          "description": "View performance analytics",
+          "handler": "analytics_hook"
+        },
+        {
+          "command": "reports",
+          "description": "View weekly/monthly reports",
+          "handler": "reports_hook"
+        }
+      ],
+      "callback_handlers": [
+        {
+          "prefix": "trademindiq_",
+          "handler": "trademindiq_callback"
+        }
+      ]
+    }
+  },
+  "files": [
+    "trademindiq_hook.py"
+  ],
+  "config": {
+    "workspace": "/Users/kahangabar/Downloads/TradeMindIQBot"
+  }
+}

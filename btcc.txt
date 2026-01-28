@@ -1,0 +1,22 @@
+BTCC
+
+
+
+
+
+                API Key:209b73c4-61a1-4f5f-9403-a61639ca40a7
+                API Secret Key:7f76b2fe-773d-4f10-a887-f60ed96d2585
+                Remark:1West
+                Jurisdiction:Futures - Read,Spot - Read,Spot - Trade
+                Binding IP address:
+              
+
+btcc:
+#   base_url: "https://api1.btloginc.com:9081"
+#   user_name: "Bankton12@gmail.com"
+#   password: "Pullup15!"
+#   api_key: "209b73c4-61a1-4f5f-9403-a61639ca40a7"
+#   secret_key: "7f76b2fe-773d-4f10-a887-f60ed96d2585"
+#   company_id: 1
+#   qty_mode: "native"          # native | notional_usd
+#   contract_value_usd: 1.0      # used when qty_mode=notional_usd and contracts are USD-settled

@@ -1,0 +1,47 @@
+mode: PAPER          # PAPER or LIVE
+exchange: kucoin
+timeframe: 1m
+symbols:
+symbols:
+  - BTC/USDT
+  - ETH/USDT
+  - BNB/USDT
+  - SOL/USDT
+  - XRP/USDT
+  - ADA/USDT
+  - DOGE/USDT
+  - TON/USDT
+  - TRX/USDT
+  - AVAX/USDT
+  - LINK/USDT
+  - LTC/USDT
+  - BCH/USDT
+  - MATIC/USDT
+  - DOT/USDT
+  - UNI/USDT
+  - INJ/USDT
+  - APT/USDT
+  - OP/USDT
+  - ARB/USDT
+  - SUI/USDT
+  - RUNE/USDT
+  - SEI/USDT
+  - NEAR/USDT
+  - AAVE/USDT
+  - STX/USDT
+  - FIL/USDT
+  - PEPE/USDT
+  - WIF/USDT
+  - JUP/USDT
+risk_per_trade: 0.005        # 0.5% of equity
+r_multiple: 2.0
+min_rel_vol: 1.1
+min_gap_pct: 0.0
+equity: 10000
+telegram:
+  bot_token: "YOUR_TELEGRAM_BOT_TOKEN"
+  chat_id: "YOUR_CHAT_ID"
+ai:
+  enabled: true
+  db_path: "trades.db"
+  openai_api_key:${OPENAI_API_KEY}
