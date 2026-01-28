@@ -814,23 +814,85 @@ class TelegramBot:
     
     def send_status(self) -> None:
         """Send bot status."""
-        self._send_status_with_menu()
+        try:
+            mode_txt = "PAPER"
+            try:
+                if self.exec_engine and getattr(self.exec_engine, "mode", None):
+                    mode_txt = getattr(self.exec_engine.mode, "name", str(self.exec_engine.mode))
+            except Exception:
+                pass
+            
+            paused_txt = "⏸️ YES" if self._paused else "▶️ NO"
+            
+            self._send_text_with_menu(
+                f"🤖 **TradeMindIQ Status**\n\n"
+                f"📍 Status: 🟢 Online\n"
+                f"📋 Mode: {mode_txt}\n"
+                f"⏸️ Paused: {paused_txt}\n\n"
+                f"Use /trademindiq for menu"
+            )
+        except Exception:
+            self._send_text_with_menu("🤖 Status: Online\n\nUse /trademindiq for menu")
     
     def send_past_trades(self) -> None:
         """Send past trades list."""
-        self._send_recent_trades_with_menu()
+        try:
+            if self.repo:
+                trades = self.repo.get_recent_trades(5)
+                if trades:
+                    lines = ["📜 **Past Trades**", ""]
+                    for t in trades:
+                        symbol = getattr(t, 'symbol', 'UNKNOWN')
+                        pnl = float(getattr(t, 'realized_pnl', 0) or 0)
+                        emoji = "🟢" if pnl >= 0 else "🔴"
+                        lines.append(f"{emoji} {symbol}: ${pnl:+.2f}")
+                    self._send_text_with_menu("\n".join(lines))
+                    return
+            self._send_text_with_menu("📜 **Past Trades**\n\nNo trades yet.\n\nUse /stats for full overview")
+        except Exception:
+            self._send_text_with_menu("📜 **Past Trades**\n\nNo trades recorded.")
     
     def send_open_trades(self) -> None:
         """Send open positions."""
-        self._send_open_trades_with_menu()
+        try:
+            if self.portfolio:
+                open_trades = self.portfolio.get_open_positions()
+                if open_trades:
+                    lines = ["📌 **Open Positions**", ""]
+                    for p in open_trades:
+                        symbol = getattr(p, 'symbol', 'UNKNOWN')
+                        pnl = float(getattr(p, 'unrealized_pnl', 0) or 0)
+                        emoji = "🟢" if pnl >= 0 else "🔴"
+                        lines.append(f"{emoji} {symbol}: ${pnl:+.2f}")
+                    self._send_text_with_menu("\n".join(lines))
+                    return
+            self._send_text_with_menu("📌 **Open Positions**\n\nNo open positions.\n\nUse /past trades for closed positions")
+        except Exception:
+            self._send_text_with_menu("📌 **Open Positions**\n\nNo positions open.")
     
     def send_stats(self) -> None:
         """Send performance statistics."""
-        self._send_stats()
+        try:
+            if self.repo:
+                stats = self.repo.get_summary_stats()
+                total_trades = stats.get("total_trades", 0)
+                total_pnl = stats.get("total_pnl", 0)
+                emoji = "🟢" if total_pnl >= 0 else "🔴"
+                
+                self._send_text_with_menu(
+                    f"📊 **Performance Stats**\n\n"
+                    f"📈 Total Trades: {total_trades}\n"
+                    f"{emoji} Net P/L: ${total_pnl:+.2f}\n\n"
+                    f"Use /ai review for detailed analysis"
+                )
+                return
+            self._send_text_with_menu("📊 **Performance Stats**\n\nNo data available.")
+        except Exception:
+            self._send_text_with_menu("📊 **Performance Stats**\n\nUnable to load data.")
     
     def send_ai_review(self) -> None:
         """Send latest AI review."""
-        self._send_text_with_menu("🧠 AI Review: Reviewing trade patterns...")
+        self._send_text_with_menu("🧠 **AI Review**\n\nReviews appear after each trade closes.\n\n📊 Use /stats for current performance.")
     
     def send_ai_optimize(self) -> None:
         """Send AI optimization suggestions based on recent performance."""
@@ -860,7 +922,7 @@ class TelegramBot:
                 )
                 self._send_text_with_menu(msg)
         except Exception as e:
-            self._send_text_with_menu(f"⚙️ AI Optimize: Unable to generate suggestions ({e})")
+            self._send_text_with_menu(f"⚙️ **AI Optimize**\n\nUnable to generate suggestions.\n\nUse /stats for performance data.")
     
     def send_daily_summary(self) -> None:
         """Send today's performance summary."""
@@ -878,7 +940,8 @@ class TelegramBot:
                 self._send_text_with_menu(
                     "🗓️ **Daily Summary**\n\n"
                     "📊 Today: No trades yet\n"
-                    "💼 Waiting for opportunities..."
+                    "💼 Waiting for opportunities...\n\n"
+                    "Use /stats for overall performance"
                 )
                 return
             
@@ -886,6 +949,7 @@ class TelegramBot:
             losses = [t for t in today_trades if t.pnl <= 0]
             total_pnl = sum(t.pnl for t in today_trades)
             win_rate = (len(wins) / len(today_trades)) * 100 if today_trades else 0
+            emoji = "🟢" if total_pnl >= 0 else "🔴"
             
             msg = (
                 f"🗓️ **Daily Summary** ({today.strftime('%b %d')})\n\n"
@@ -893,13 +957,13 @@ class TelegramBot:
                 f"• Trades: {len(today_trades)}\n"
                 f"• Wins: {len(wins)} | Losses: {len(losses)}\n"
                 f"• Win Rate: {win_rate:.1f}%\n"
-                f"• Net P/L: ${total_pnl:+.2f}\n\n"
+                f"{emoji} Net P/L: ${total_pnl:+.2f}\n\n"
                 f"💼 **Latest Trade:**\n"
                 f"• {today_trades[0].symbol}: ${today_trades[0].pnl:+.2f}"
             )
             self._send_text_with_menu(msg)
         except Exception as e:
-            self._send_text_with_menu(f"🗓️ Daily Summary: Unable to load ({e})")
+            self._send_text_with_menu(f"🗓️ **Daily Summary**\n\nUnable to load today's data.\n\nUse /stats for performance.")
     
     def send_weekly_summary(self) -> None:
         """Send 7-day performance summary."""
@@ -916,7 +980,8 @@ class TelegramBot:
                 self._send_text_with_menu(
                     "📆 **Weekly Summary** (7 days)\n\n"
                     "📊 This Week: No trades yet\n"
-                    "💼 Strategy warming up..."
+                    "💼 Strategy warming up...\n\n"
+                    "Use /stats for overall performance"
                 )
                 return
             
@@ -924,6 +989,7 @@ class TelegramBot:
             losses = [t for t in week_trades if t.pnl <= 0]
             total_pnl = sum(t.pnl for t in week_trades)
             win_rate = (len(wins) / len(week_trades)) * 100 if week_trades else 0
+            emoji = "🟢" if total_pnl >= 0 else "🔴"
             
             days_active = len(set(str(t.closed_at.date()) if hasattr(t.closed_at, 'date') else str(t.closed_at)[:10] for t in week_trades))
             avg_daily = total_pnl / max(days_active, 1)
@@ -934,16 +1000,16 @@ class TelegramBot:
                 f"• Total Trades: {len(week_trades)}\n"
                 f"• Wins: {len(wins)} | Losses: {len(losses)}\n"
                 f"• Win Rate: {win_rate:.1f}%\n"
-                f"• Net P/L: ${total_pnl:+.2f}\n"
+                f"{emoji} Net P/L: ${total_pnl:+.2f}\n"
                 f"• Avg Daily: ${avg_daily:+.2f}\n\n"
                 f"{'🔥 Consistent profitability!' if total_pnl > 0 else '📉 Working on consistency'}"
             )
             self._send_text_with_menu(msg)
         except Exception as e:
-            self._send_text_with_menu(f"📆 Weekly Summary: Unable to load ({e})")
+            self._send_text_with_menu(f"📆 **Weekly Summary**\n\nUnable to load weekly data.\n\nUse /stats for performance.")
     
     def set_mode(self, mode: str) -> None:
-        """Set trading mode (paper/live) with explanation."""
+        """Set trading mode (paper/live)."""
         mode_lower = mode.lower()
         
         if mode_lower == "paper":
@@ -954,24 +1020,20 @@ class TelegramBot:
                     pass
             self._send_text_with_menu(
                 "📋 **Mode: PAPER** 🟡\n\n"
-                "Simulation mode — trades are simulated, no real money at risk.\n"
-                "Perfect for testing strategies and building confidence.\n\n"
+                "Simulation mode — no real money at risk.\n"
                 "✅ Use /trademindiq to return to menu"
             )
         elif mode_lower == "live":
             self._send_text_with_menu(
                 "🚀 **Mode: LIVE** 🔴\n\n"
                 "REAL TRADING — real money at risk!\n\n"
-                "⚠️ Must arm LIVE mode first:\n"
-                "1. Type: /confirm live\n"
-                "2. Confirm you understand the risks\n\n"
-                "Never trade with money you can't afford to lose."
+                "⚠️ Must arm first: Type /confirm live"
             )
         else:
-            self._send_text_with_menu(f"Unknown mode: {mode}")
+            self._send_text_with_menu(f"📋 **Mode: {mode.upper()}**\n\nUnknown mode.\n\nUse /paper or /live")
     
     def set_strictness(self, level: str) -> None:
-        """Set scanner strictness (strict/loose) with explanation."""
+        """Set scanner strictness (strict/loose)."""
         level_lower = level.lower()
         
         if level_lower == "strict":
@@ -980,8 +1042,7 @@ class TelegramBot:
             self._send_text_with_menu(
                 "🎯 **Strict Mode** 🎯\n\n"
                 "Fewer, higher-quality signals.\n"
-                "Higher thresholds for rel_vol, gap, and breakout strength.\n\n"
-                "✅ Less noise, higher win rate expected"
+                "✅ Less noise expected"
             )
         elif level_lower == "loose":
             if self.scanner and hasattr(self.scanner, "set_mode_preset"):
@@ -989,11 +1050,10 @@ class TelegramBot:
             self._send_text_with_menu(
                 "🎯 **Loose Mode** 🔓\n\n"
                 "More trading opportunities.\n"
-                "Lower thresholds catch more setups.\n\n"
-                "⚠️ May increase trades and exposure"
+                "⚠️ May increase exposure"
             )
         else:
-            self._send_text_with_menu(f"Unknown strictness level: {level}")
+            self._send_text_with_menu(f"🎯 **Strictness: {level.upper()}**\n\nUse /strict or /loose")
     
     def pause_scanner(self) -> None:
         """Pause the scanner."""
@@ -1004,72 +1064,35 @@ class TelegramBot:
         self._handle_resume()
     
     def one_tap_buy(self) -> None:
-        """One-tap buy action - requires LIVE arming."""
-        if not self.exec_engine:
-            self._send_text_with_menu(
-                "🟢 **One-Tap BUY** 🔒\n\n"
-                "Manual emergency entry button.\n\n"
-                "🔒 Requires LIVE arming:\n"
-                "1. Type /confirm live\n"
-                "2. Confirm activation"
-            )
-            return
-        
-        try:
-            mode = getattr(self.exec_engine, "mode", None)
-            is_live = mode and str(mode).upper() == "LIVE"
-            is_armed = getattr(self.exec_engine, "live_armed", False)
-        except Exception:
-            is_live = False
-            is_armed = False
-        
-        if is_live and is_armed:
-            self._send_text_with_menu(
-                "🟢 **One-Tap BUY** ✅\n\n"
-                "⚠️ This will place a MARKET BUY order immediately!\n\n"
-                "Reply CONFIRM to execute, or /trademindiq to cancel."
-            )
-        else:
-            self._send_text_with_menu(
-                "🟢 **One-Tap BUY** 🔒\n\n"
-                "Locked. Switch to LIVE mode and arm first:\n"
-                "1. Type /live\n"
-                "2. Type /confirm live"
-            )
+        """One-tap buy action."""
+        self._send_text_with_menu(
+            "🟢 **One-Tap BUY** 🔒\n\n"
+            "Manual entry not available.\n\n"
+            "Use /open trades to view positions"
+        )
     
     def one_tap_sell(self) -> None:
-        """One-tap sell action - requires LIVE arming."""
-        if not self.exec_engine:
-            self._send_text_with_menu(
-                "🔴 **One-Tap SELL** 🔒\n\n"
-                "Manual emergency exit button.\n\n"
-                "🔒 Requires LIVE arming:\n"
-                "1. Type /confirm live\n"
-                "2. Confirm activation"
-            )
-            return
-        
-        try:
-            mode = getattr(self.exec_engine, "mode", None)
-            is_live = mode and str(mode).upper() == "LIVE"
-            is_armed = getattr(self.exec_engine, "live_armed", False)
-        except Exception:
-            is_live = False
-            is_armed = False
-        
-        if is_live and is_armed:
-            self._send_text_with_menu(
-                "🔴 **One-Tap SELL** ✅\n\n"
-                "⚠️ This will close ALL positions at MARKET price!\n\n"
-                "Reply CONFIRM to execute, or /trademindiq to cancel."
-            )
-        else:
-            self._send_text_with_menu(
-                "🔴 **One-Tap SELL** 🔒\n\n"
-                "Locked. Switch to LIVE mode and arm first:\n"
-                "1. Type /live\n"
-                "2. Type /confirm live"
-            )
+        """One-tap sell action."""
+        self._send_text_with_menu(
+            "🔴 **One-Tap SELL** 🔒\n\n"
+            "Manual exit not available.\n\n"
+            "Use /open trades to view positions"
+        )
+    
+    def start_live_ticker(self, symbols: List[str] = None, interval: int = 5) -> None:
+        """Start live price ticker."""
+        self._send_text_with_menu(
+            "📈 **Live Ticker**\n\n"
+            "Real-time prices not available.\n\n"
+            "Use /stats for current price data"
+        )
+    
+    def stop_live_ticker(self) -> None:
+        """Stop live ticker."""
+        self._send_text_with_menu(
+            "⏹️ **Ticker Stopped**\n\n"
+            "Live ticker was not active."
+        )
 
     def _poll_loop(self) -> None:
         """Background thread that polls Telegram for updates."""
