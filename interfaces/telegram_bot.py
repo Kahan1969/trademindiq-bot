@@ -193,10 +193,14 @@ class TelegramBot:
             "dashboard": self.send_dashboard,
             "status": self.send_status,
             "past trades": self.send_past_trades,
+            "past_trades": self.send_past_trades,
             "open trades": self.send_open_trades,
+            "open_trades": self.send_open_trades,
             "stats": self.send_stats,
             "ai review": self.send_ai_review,
+            "ai_review": self.send_ai_review,
             "ai optimize": self.send_ai_optimize,
+            "ai_optimize": self.send_ai_optimize,
             "daily": self.send_daily_summary,
             "daily summary": self.send_daily_summary,
             "weekly": self.send_weekly_summary,
@@ -210,7 +214,9 @@ class TelegramBot:
             "ticker": self.start_live_ticker,
             "price": self.start_live_ticker,
             "one-tap buy": self.one_tap_buy,
+            "one_tap_buy": self.one_tap_buy,
             "one-tap sell": self.one_tap_sell,
+            "one_tap_sell": self.one_tap_sell,
             "pause": self.pause_scanner,
             "resume": self.resume_scanner,
         }
@@ -249,62 +255,51 @@ class TelegramBot:
         self.send_dashboard()
 
     def send_dashboard(self) -> None:
-        """Send custom HTML keyboard in message body."""
-        keyboard_buttons = [
-            {"text": "📊 Stats", "color": "#FF6B6B", "cmd": "/stats"},
-            {"text": "📜 Past Trades", "color": "#4ECDC4", "cmd": "/past trades"},
-            {"text": "📌 Open Trades", "color": "#45B7D1", "cmd": "/open trades"},
-            {"text": "🧠 AI Review", "color": "#96CEB4", "cmd": "/ai review"},
-            {"text": "⚙️ AI Optimize", "color": "#DDA0DD", "cmd": "/ai optimize"},
-            {"text": "🗓️ Daily", "color": "#FFB347", "cmd": "/daily"},
-            {"text": "📆 Weekly", "color": "#DDA0DD", "cmd": "/weekly"},
-            {"text": "📋 Paper", "color": "#F7DC6F", "cmd": "/paper"},
-            {"text": "🚀 Live", "color": "#E74C3C", "cmd": "/live"},
-            {"text": "🎯 Strict", "color": "#4ECDC4", "cmd": "/strict"},
-            {"text": "🔓 Loose", "color": "#FFB347", "cmd": "/loose"},
-            {"text": "📈 Ticker", "color": "#45B7D1", "cmd": "/ticker"},
-            {"text": "🟢 Buy", "color": "#2ECC71", "cmd": "/one-tap buy"},
-            {"text": "🔴 Sell", "color": "#E74C3C", "cmd": "/one-tap sell"},
-            {"text": "⏸️ Pause", "color": "#636E72", "cmd": "/pause"},
-            {"text": "▶️ Resume", "color": "#2ECC71", "cmd": "/resume"},
-            {"text": "🤖 Status", "color": "#45B7D1", "cmd": "/status"},
-            {"text": "🏠 Menu", "color": "#636E72", "cmd": "/trademindiq"},
-        ]
-        
-        # Build 3-column grid
-        rows = [keyboard_buttons[i:i+3] for i in range(0, len(keyboard_buttons), 3)]
-        
-        buttons_html = ""
-        for row in rows:
-            buttons_html += '<div style="display:flex;gap:8px;margin-bottom:8px;">'
-            for btn in row:
-                buttons_html += f'''<a href="/{btn['cmd'].replace('/', '')}" style="
-                    display:inline-block;
-                    padding:12px 20px;
-                    background:{btn['color']};
-                    color:white;
-                    text-decoration:none;
-                    border-radius:8px;
-                    font-weight:bold;
-                    text-align:center;
-                    flex:1;
-                    box-shadow:0 2px 4px rgba(0,0,0,0.2);
-                ">{btn['text']}</a>'''
-            buttons_html += '</div>'
-        
-        html = f"""<b>📊 TradeMindIQ Control Center</b>
-
-{buttons_html}
-
-<i>Tap any button to execute command</i>"""
+        """Send inline keyboard with colored buttons in message body."""
+        keyboard = {
+            "inline_keyboard": [
+                [
+                    {"text": "📊 Stats", "callback_data": "stats"},
+                    {"text": "📜 Past Trades", "callback_data": "past_trades"},
+                    {"text": "📌 Open Trades", "callback_data": "open_trades"}
+                ],
+                [
+                    {"text": "🧠 AI Review", "callback_data": "ai_review"},
+                    {"text": "⚙️ AI Optimize", "callback_data": "ai_optimize"},
+                    {"text": "🗓️ Daily", "callback_data": "daily"}
+                ],
+                [
+                    {"text": "📆 Weekly", "callback_data": "weekly"},
+                    {"text": "📋 Paper", "callback_data": "paper"},
+                    {"text": "🚀 Live", "callback_data": "live"}
+                ],
+                [
+                    {"text": "🎯 Strict", "callback_data": "strict"},
+                    {"text": "🔓 Loose", "callback_data": "loose"},
+                    {"text": "📈 Ticker", "callback_data": "ticker"}
+                ],
+                [
+                    {"text": "🟢 Buy", "callback_data": "one_tap_buy"},
+                    {"text": "🔴 Sell", "callback_data": "one_tap_sell"},
+                    {"text": "⏸️ Pause", "callback_data": "pause"}
+                ],
+                [
+                    {"text": "▶️ Resume", "callback_data": "resume"},
+                    {"text": "🤖 Status", "callback_data": "status"},
+                    {"text": "🏠 Menu", "callback_data": "trademindiq"}
+                ]
+            ]
+        }
         
         try:
+            import json
             r = requests.get(
                 f"{self.base}/sendMessage",
                 params={
                     "chat_id": self.chat_id,
-                    "text": html,
+                    "text": "📊 <b>TradeMindIQ Control Center</b>\n\nTap a button below:",
                     "parse_mode": "HTML",
+                    "reply_markup": json.dumps(keyboard)
                 },
                 timeout=10,
             )
