@@ -78,6 +78,18 @@ telegram:
   bot_token: "YOUR_TELEGRAM_BOT_TOKEN"
   chat_id: "YOUR_CHAT_ID"
 
+# News APIs - use env variables
+news:
+  cryptopanic:
+    enabled: true
+  finnhub:
+    enabled: true
+
+# AI Configuration
 ai:
   enabled: true
   db_path: "trades.db"
+  model: "gpt-4"
+  trade_explanations: true
+  trade_suggestions: true
+  analysis_enabled: true
