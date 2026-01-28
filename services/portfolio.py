@@ -384,33 +384,36 @@ class PortfolioTracker:
         Scan trades database for open positions.
         In production, this would check exchange APIs directly.
         """
-        # Read from trades.db to find recent activity
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        # Get recent closed trades to understand activity
-        cursor.execute("""
-            SELECT symbol, side, entry, exit_price, pnl, created_at, closed_at
-            FROM trades
-            ORDER BY closed_at DESC
-            LIMIT 50
-        """)
-        
-        rows = cursor.fetchall()
-        conn.close()
+        # Try to read from trades.db, fall back to demo mode on error
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT symbol, side, entry, exit_price, pnl, created_at, closed_at
+                FROM trades
+                WHERE closed_at IS NULL
+                LIMIT 50
+            """)
+            rows = cursor.fetchall()
+            conn.close()
+        except Exception:
+            rows = []
         
         # Simulate open positions based on recent activity
         # In production, you'd query exchange APIs for actual open positions
         open_positions = []
         
-        # Get unique symbols from recent trades
-        symbols = list(set(row[0] for row in rows))
+        # Get unique symbols from database
+        symbols = list(set(row[0] for row in rows)) if rows else []
+        
+        # If no positions in DB, use demo positions for display
+        if not symbols:
+            symbols = ["BTC/USDT", "SOL/USDT", "ETH/USDT", "BNB/USDT", "XRP/USDT"]
+        
         current_prices = self._fetch_current_prices(symbols)
         
-        # Simulate some open positions for demo
+        # Demo positions for showcase
         now = datetime.now()
-        
-        # Add some simulated open positions for demonstration
         demo_positions = [
             {"symbol": "BTC/USDT", "side": "BUY", "entry": 98500.0, "qty": 0.01},
             {"symbol": "SOL/USDT", "side": "BUY", "entry": 195.0, "qty": 2.0},
