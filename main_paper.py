@@ -155,9 +155,9 @@ async def main() -> None:
         openai_api_key=openai_key,
     )
 
-    # If your TelegramBot has polling/menu helpers, start them safely
-    if hasattr(telegram, "start_polling_background"):
-        telegram.start_polling_background()
+    # Start Telegram polling in background task BEFORE main loop
+    if hasattr(telegram, "start_polling"):
+        asyncio.create_task(asyncio.to_thread(telegram.start_polling))
     if hasattr(telegram, "send_menu"):
         telegram.send_menu()
 

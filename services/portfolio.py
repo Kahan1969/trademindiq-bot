@@ -62,10 +62,42 @@ class PortfolioTracker:
         self.analytics = PerformanceAnalytics(db_path)
         self._positions: Dict[str, List[Position]] = defaultdict(list)
         self._current_prices: Dict[str, float] = {}
+        self._open_orders: List = []  # Track open orders
         self.telegram = telegram  # Optional Telegram bot for notifications
         
         # Initialize with some simulated current prices
         self._initialize_simulated_prices()
+    
+    @property
+    def open_orders(self) -> List:
+        """Return list of open orders."""
+        return getattr(self, '_open_orders', [])
+    
+    def register_order(self, order) -> None:
+        """Register a new order/position."""
+        if hasattr(order, 'symbol'):
+            # Create a Position-like object for tracking
+            try:
+                entry = float(getattr(order, 'entry_price', getattr(order, 'filled_price', 0)) or 0)
+                qty = float(getattr(order, 'qty', 0) or 0)
+                side = getattr(order, 'side', 'BUY') or 'BUY'
+                
+                position = Position(
+                    symbol=getattr(order, 'symbol', 'UNKNOWN'),
+                    exchange="kucoin",
+                    side=side,
+                    entry_price=entry,
+                    current_price=entry,
+                    quantity=qty,
+                    unrealized_pnl=0,
+                    unrealized_pnl_pct=0,
+                    entry_time=datetime.now(),
+                    duration_seconds=0
+                )
+                self._positions["kucoin"].append(position)
+                self._open_orders.append(order)
+            except Exception as e:
+                print(f"[PortfolioTracker] Error registering order: {e}")
     
     def _initialize_simulated_prices(self):
         """Initialize with realistic current prices."""
