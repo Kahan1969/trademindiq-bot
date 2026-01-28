@@ -902,9 +902,6 @@ class TelegramBot:
         self._send_text("▶️ Scanner alerts resumed.")
 
     # --- Command Handlers (Stubs - wire to real implementations) ---
-    def send_dashboard(self) -> None:
-        """Send the main dashboard menu."""
-        self.send_menu()
 
     def send_status(self) -> None:
         """Send bot status."""
