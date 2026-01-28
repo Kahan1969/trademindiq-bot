@@ -158,7 +158,10 @@ async def main() -> None:
     # Start Telegram polling in background task BEFORE main loop
     if hasattr(telegram, "start_polling"):
         asyncio.create_task(asyncio.to_thread(telegram.start_polling))
-    if hasattr(telegram, "send_menu"):
+    
+    # Only send startup menu once
+    if hasattr(telegram, "send_menu") and not hasattr(telegram, "_menu_sent"):
+        telegram._menu_sent = True
         telegram.send_menu()
 
     # ---------- Event handlers ----------
