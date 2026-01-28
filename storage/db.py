@@ -3,8 +3,10 @@ from core.models import Trade
 
 
 class TradeRepository:
-    def __init__(self, path: str = "trades.db"):
-        self.conn = sqlite3.connect(path)
+    def __init__(self, path: str = "trades.db", db_path: str = None):
+        # Support both path and db_path for backward compatibility
+        db_file = path if db_path is None else db_path
+        self.conn = sqlite3.connect(db_file)
         self._init()
 
     def _init(self):
