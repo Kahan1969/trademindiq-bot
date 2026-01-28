@@ -832,24 +832,167 @@ class TelegramBot:
         self._send_text_with_menu("🧠 AI Review: Reviewing trade patterns...")
     
     def send_ai_optimize(self) -> None:
-        """Send AI optimization suggestions."""
-        self._send_text_with_menu("⚙️ AI Optimize: Analyzing parameters...")
+        """Send AI optimization suggestions based on recent performance."""
+        try:
+            if self.repo:
+                stats = self.repo.get_summary_stats()
+                total_trades = stats.get("total_trades", 0)
+                total_pnl = stats.get("total_pnl", 0)
+                
+                suggestions = []
+                
+                if total_trades < 5:
+                    suggestions.append("• Not enough data for optimization yet")
+                elif total_pnl < 0:
+                    suggestions.append("• Consider increasing min_rel_vol filter")
+                    suggestions.append("• Try tighter gap requirements")
+                elif total_pnl > 0:
+                    suggestions.append("• Strategy is working well!")
+                    suggestions.append("• Consider slight position size increase")
+                
+                msg = (
+                    "⚙️ **AI Optimization Suggestions**\n\n"
+                    f"📊 Recent Performance:\n"
+                    f"• Trades: {total_trades}\n"
+                    f"• Net P/L: ${total_pnl:.2f}\n\n"
+                    f"💡 Recommendations:\n" + "\n".join(suggestions) if suggestions else "• No specific changes recommended"
+                )
+                self._send_text_with_menu(msg)
+        except Exception as e:
+            self._send_text_with_menu(f"⚙️ AI Optimize: Unable to generate suggestions ({e})")
     
     def send_daily_summary(self) -> None:
-        """Send daily performance summary."""
-        self._send_text_with_menu("🗓️ Daily Summary: (coming soon)")
+        """Send today's performance summary."""
+        try:
+            from datetime import datetime, timedelta
+            from services.analytics import PerformanceAnalytics
+            
+            analytics = PerformanceAnalytics(db_path="trades.db")
+            today = datetime.now()
+            today_start = today.replace(hour=0, minute=0, second=0, microsecond=0)
+            
+            today_trades = analytics.get_trades_by_date(today_start, today)
+            
+            if not today_trades:
+                self._send_text_with_menu(
+                    "🗓️ **Daily Summary**\n\n"
+                    "📊 Today: No trades yet\n"
+                    "💼 Waiting for opportunities..."
+                )
+                return
+            
+            wins = [t for t in today_trades if t.pnl > 0]
+            losses = [t for t in today_trades if t.pnl <= 0]
+            total_pnl = sum(t.pnl for t in today_trades)
+            win_rate = (len(wins) / len(today_trades)) * 100 if today_trades else 0
+            
+            msg = (
+                f"🗓️ **Daily Summary** ({today.strftime('%b %d')})\n\n"
+                f"📊 **Today's Performance:**\n"
+                f"• Trades: {len(today_trades)}\n"
+                f"• Wins: {len(wins)} | Losses: {len(losses)}\n"
+                f"• Win Rate: {win_rate:.1f}%\n"
+                f"• Net P/L: ${total_pnl:+.2f}\n\n"
+                f"💼 **Latest Trade:**\n"
+                f"• {today_trades[0].symbol}: ${today_trades[0].pnl:+.2f}"
+            )
+            self._send_text_with_menu(msg)
+        except Exception as e:
+            self._send_text_with_menu(f"🗓️ Daily Summary: Unable to load ({e})")
     
     def send_weekly_summary(self) -> None:
-        """Send weekly performance summary."""
-        self._send_text_with_menu("📆 Weekly Summary: (coming soon)")
+        """Send 7-day performance summary."""
+        try:
+            from datetime import datetime, timedelta
+            from services.analytics import PerformanceAnalytics
+            
+            analytics = PerformanceAnalytics(db_path="trades.db")
+            week_ago = datetime.now() - timedelta(days=7)
+            
+            week_trades = analytics.get_trades_by_date(week_ago, datetime.now())
+            
+            if not week_trades:
+                self._send_text_with_menu(
+                    "📆 **Weekly Summary** (7 days)\n\n"
+                    "📊 This Week: No trades yet\n"
+                    "💼 Strategy warming up..."
+                )
+                return
+            
+            wins = [t for t in week_trades if t.pnl > 0]
+            losses = [t for t in week_trades if t.pnl <= 0]
+            total_pnl = sum(t.pnl for t in week_trades)
+            win_rate = (len(wins) / len(week_trades)) * 100 if week_trades else 0
+            
+            days_active = len(set(str(t.closed_at.date()) if hasattr(t.closed_at, 'date') else str(t.closed_at)[:10] for t in week_trades))
+            avg_daily = total_pnl / max(days_active, 1)
+            
+            msg = (
+                f"📆 **Weekly Summary** (7 days)\n\n"
+                f"📊 **7-Day Performance:**\n"
+                f"• Total Trades: {len(week_trades)}\n"
+                f"• Wins: {len(wins)} | Losses: {len(losses)}\n"
+                f"• Win Rate: {win_rate:.1f}%\n"
+                f"• Net P/L: ${total_pnl:+.2f}\n"
+                f"• Avg Daily: ${avg_daily:+.2f}\n\n"
+                f"{'🔥 Consistent profitability!' if total_pnl > 0 else '📉 Working on consistency'}"
+            )
+            self._send_text_with_menu(msg)
+        except Exception as e:
+            self._send_text_with_menu(f"📆 Weekly Summary: Unable to load ({e})")
     
     def set_mode(self, mode: str) -> None:
-        """Set trading mode (paper/live)."""
-        self._send_text_with_menu(f"Mode set: {mode.upper()}")
+        """Set trading mode (paper/live) with explanation."""
+        mode_lower = mode.lower()
+        
+        if mode_lower == "paper":
+            if self.exec_engine:
+                try:
+                    self.exec_engine.mode = Mode.PAPER
+                except Exception:
+                    pass
+            self._send_text_with_menu(
+                "📋 **Mode: PAPER** 🟡\n\n"
+                "Simulation mode — trades are simulated, no real money at risk.\n"
+                "Perfect for testing strategies and building confidence.\n\n"
+                "✅ Use /trademindiq to return to menu"
+            )
+        elif mode_lower == "live":
+            self._send_text_with_menu(
+                "🚀 **Mode: LIVE** 🔴\n\n"
+                "REAL TRADING — real money at risk!\n\n"
+                "⚠️ Must arm LIVE mode first:\n"
+                "1. Type: /confirm live\n"
+                "2. Confirm you understand the risks\n\n"
+                "Never trade with money you can't afford to lose."
+            )
+        else:
+            self._send_text_with_menu(f"Unknown mode: {mode}")
     
     def set_strictness(self, level: str) -> None:
-        """Set scanner strictness (strict/loose)."""
-        self._send_text_with_menu(f"Strictness set: {level.upper()}")
+        """Set scanner strictness (strict/loose) with explanation."""
+        level_lower = level.lower()
+        
+        if level_lower == "strict":
+            if self.scanner and hasattr(self.scanner, "set_mode_preset"):
+                self.scanner.set_mode_preset("strict")
+            self._send_text_with_menu(
+                "🎯 **Strict Mode** 🎯\n\n"
+                "Fewer, higher-quality signals.\n"
+                "Higher thresholds for rel_vol, gap, and breakout strength.\n\n"
+                "✅ Less noise, higher win rate expected"
+            )
+        elif level_lower == "loose":
+            if self.scanner and hasattr(self.scanner, "set_mode_preset"):
+                self.scanner.set_mode_preset("loose")
+            self._send_text_with_menu(
+                "🎯 **Loose Mode** 🔓\n\n"
+                "More trading opportunities.\n"
+                "Lower thresholds catch more setups.\n\n"
+                "⚠️ May increase trades and exposure"
+            )
+        else:
+            self._send_text_with_menu(f"Unknown strictness level: {level}")
     
     def pause_scanner(self) -> None:
         """Pause the scanner."""
@@ -860,12 +1003,72 @@ class TelegramBot:
         self._handle_resume()
     
     def one_tap_buy(self) -> None:
-        """One-tap buy action (placeholder)."""
-        self._send_text_with_menu("🟢 One-Tap BUY: Not armed (requires /confirm live)")
+        """One-tap buy action - requires LIVE arming."""
+        if not self.exec_engine:
+            self._send_text_with_menu(
+                "🟢 **One-Tap BUY** 🔒\n\n"
+                "Manual emergency entry button.\n\n"
+                "🔒 Requires LIVE arming:\n"
+                "1. Type /confirm live\n"
+                "2. Confirm activation"
+            )
+            return
+        
+        try:
+            mode = getattr(self.exec_engine, "mode", None)
+            is_live = mode and str(mode).upper() == "LIVE"
+            is_armed = getattr(self.exec_engine, "live_armed", False)
+        except Exception:
+            is_live = False
+            is_armed = False
+        
+        if is_live and is_armed:
+            self._send_text_with_menu(
+                "🟢 **One-Tap BUY** ✅\n\n"
+                "⚠️ This will place a MARKET BUY order immediately!\n\n"
+                "Reply CONFIRM to execute, or /trademindiq to cancel."
+            )
+        else:
+            self._send_text_with_menu(
+                "🟢 **One-Tap BUY** 🔒\n\n"
+                "Locked. Switch to LIVE mode and arm first:\n"
+                "1. Type /live\n"
+                "2. Type /confirm live"
+            )
     
     def one_tap_sell(self) -> None:
-        """One-tap sell action (placeholder)."""
-        self._send_text_with_menu("🔴 One-Tap SELL: Not armed (requires /confirm live)")
+        """One-tap sell action - requires LIVE arming."""
+        if not self.exec_engine:
+            self._send_text_with_menu(
+                "🔴 **One-Tap SELL** 🔒\n\n"
+                "Manual emergency exit button.\n\n"
+                "🔒 Requires LIVE arming:\n"
+                "1. Type /confirm live\n"
+                "2. Confirm activation"
+            )
+            return
+        
+        try:
+            mode = getattr(self.exec_engine, "mode", None)
+            is_live = mode and str(mode).upper() == "LIVE"
+            is_armed = getattr(self.exec_engine, "live_armed", False)
+        except Exception:
+            is_live = False
+            is_armed = False
+        
+        if is_live and is_armed:
+            self._send_text_with_menu(
+                "🔴 **One-Tap SELL** ✅\n\n"
+                "⚠️ This will close ALL positions at MARKET price!\n\n"
+                "Reply CONFIRM to execute, or /trademindiq to cancel."
+            )
+        else:
+            self._send_text_with_menu(
+                "🔴 **One-Tap SELL** 🔒\n\n"
+                "Locked. Switch to LIVE mode and arm first:\n"
+                "1. Type /live\n"
+                "2. Type /confirm live"
+            )
 
     def handle_dashboard_callback(self, call_data: str) -> None:
         """Handle callback queries from inline keyboards."""
