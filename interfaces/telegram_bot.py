@@ -255,7 +255,7 @@ class TelegramBot:
         self.send_dashboard()
 
     def send_dashboard(self) -> None:
-        """Send inline keyboard with colored buttons in message body."""
+        """Send inline keyboard with large clickable buttons."""
         keyboard = {
             "inline_keyboard": [
                 [
@@ -297,7 +297,7 @@ class TelegramBot:
                 f"{self.base}/sendMessage",
                 params={
                     "chat_id": self.chat_id,
-                    "text": "📊 <b>TradeMindIQ Control Center</b>\n\nTap a button below:",
+                    "text": "📊 <b>TradeMindIQ Control Center</b>\n\n<b>Tap a button:</b>",
                     "parse_mode": "HTML",
                     "reply_markup": json.dumps(keyboard)
                 },
