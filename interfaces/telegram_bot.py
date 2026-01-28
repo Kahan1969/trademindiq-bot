@@ -101,40 +101,40 @@ class TelegramBot:
         return {
             "inline_keyboard": [
                 [
-                    {"text": "📊 Stats", "switch_inline_query": "/stats"},
-                    {"text": "📜 Past Trades", "switch_inline_query": "/past trades"}
+                    {"text": "🟠 📊 Stats", "switch_inline_query": "/stats"},
+                    {"text": "🟣 📜 Past Trades", "switch_inline_query": "/past trades"}
                 ],
                 [
-                    {"text": "📌 Open Trades", "switch_inline_query": "/open trades"},
-                    {"text": "🧠 AI Review", "switch_inline_query": "/ai review"}
+                    {"text": "🟢 📌 Open Trades", "switch_inline_query": "/open trades"},
+                    {"text": "🔵 🧠 AI Review", "switch_inline_query": "/ai review"}
                 ],
                 [
-                    {"text": "⚙️ AI Optimize", "switch_inline_query": "/ai optimize"},
-                    {"text": "🗓️ Daily", "switch_inline_query": "/daily"}
+                    {"text": "🩷 ⚙️ AI Optimize", "switch_inline_query": "/ai optimize"},
+                    {"text": "🟠 🗓️ Daily", "switch_inline_query": "/daily"}
                 ],
                 [
-                    {"text": "📆 Weekly", "switch_inline_query": "/weekly"},
-                    {"text": "📋 Paper", "switch_inline_query": "/paper"}
+                    {"text": "🩷 📆 Weekly", "switch_inline_query": "/weekly"},
+                    {"text": "🟡 📋 Paper", "switch_inline_query": "/paper"}
                 ],
                 [
-                    {"text": "🚀 Live", "switch_inline_query": "/live"},
-                    {"text": "🎯 Strict", "switch_inline_query": "/strict"}
+                    {"text": "🔴 🚀 Live", "switch_inline_query": "/live"},
+                    {"text": "🟣 🎯 Strict", "switch_inline_query": "/strict"}
                 ],
                 [
-                    {"text": "🔓 Loose", "switch_inline_query": "/loose"},
-                    {"text": "📈 Ticker", "switch_inline_query": "/ticker"}
+                    {"text": "🟠 🔓 Loose", "switch_inline_query": "/loose"},
+                    {"text": "🟢 📈 Ticker", "switch_inline_query": "/ticker"}
                 ],
                 [
-                    {"text": "🟢 Buy", "switch_inline_query": "/one-tap buy"},
-                    {"text": "🔴 Sell", "switch_inline_query": "/one-tap sell"}
+                    {"text": "🟢 🟢 Buy", "switch_inline_query": "/one-tap buy"},
+                    {"text": "🔴 🔴 Sell", "switch_inline_query": "/one-tap sell"}
                 ],
                 [
-                    {"text": "⏸️ Pause", "switch_inline_query": "/pause"},
-                    {"text": "▶️ Resume", "switch_inline_query": "/resume"}
+                    {"text": "⚫ ⏸️ Pause", "switch_inline_query": "/pause"},
+                    {"text": "🟢 ▶️ Resume", "switch_inline_query": "/resume"}
                 ],
                 [
-                    {"text": "🤖 Status", "switch_inline_query": "/status"},
-                    {"text": "🏠 Menu", "switch_inline_query": "/trademindiq"}
+                    {"text": "🔵 🤖 Status", "switch_inline_query": "/status"},
+                    {"text": "⚫ 🏠 Menu", "switch_inline_query": "/trademindiq"}
                 ]
             ]
         }
