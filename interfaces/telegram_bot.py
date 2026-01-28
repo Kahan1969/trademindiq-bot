@@ -69,7 +69,7 @@ class TelegramBot:
             bus.subscribe(EventType.SIGNAL_CREATED, self.on_signal)
             bus.subscribe(EventType.ORDER_PLACED, self.on_order)
             bus.subscribe(EventType.TRADE_CLOSED, self.on_trade)
-        
+
         # Register bot commands for command suggestions
         self._register_commands()
 
@@ -78,7 +78,7 @@ class TelegramBot:
     # -----------------------------
     def _tg_debug(self) -> bool:
         return str(os.getenv("TELEGRAM_DEBUG", "0")).strip().lower() in ("1", "true", "yes", "y")
-    
+
     def _register_commands(self) -> None:
         """Register bot commands with Telegram for command suggestions."""
         commands = [
@@ -102,7 +102,7 @@ class TelegramBot:
             {"command": "pause", "description": "⚫ Pause scanner alerts"},
             {"command": "resume", "description": "🟢 Resume scanner alerts"},
         ]
-        
+
         try:
             r = requests.get(
                 f"{self.base}/setMyCommands",
@@ -121,7 +121,7 @@ class TelegramBot:
                 except Exception:
                     pass
             pass
-    
+
     def _send_text(self, text: str) -> None:
         try:
             r = requests.get(
@@ -141,6 +141,45 @@ class TelegramBot:
                 except Exception:
                     pass
             pass
+
+    def _get_custom_keyboard(self) -> dict:
+        """Return custom reply keyboard with all commands."""
+        return {
+            "keyboard": [
+                [
+                    {"text": "📊 Stats"},
+                    {"text": "📜 Past Trades"},
+                    {"text": "📌 Open Trades"}
+                ],
+                [
+                    {"text": "🧠 AI Review"},
+                    {"text": "⚙️ AI Optimize"},
+                    {"text": "🗓️ Daily"}
+                ],
+                [
+                    {"text": "📆 Weekly"},
+                    {"text": "📋 Paper"},
+                    {"text": "🚀 Live"}
+                ],
+                [
+                    {"text": "🎯 Strict"},
+                    {"text": "🔓 Loose"},
+                    {"text": "📈 Ticker"}
+                ],
+                [
+                    {"text": "🟢 Buy"},
+                    {"text": "🔴 Sell"},
+                    {"text": "⏸️ Pause"}
+                ],
+                [
+                    {"text": "▶️ Resume"},
+                    {"text": "🤖 Status"},
+                    {"text": "🏠 Menu"}
+                ]
+            ],
+            "resize_keyboard": True,
+            "one_time_keyboard": False,
+        }
 
     def _get_menu_keyboard(self) -> dict:
         """Return the inline keyboard for the main menu."""
@@ -245,36 +284,20 @@ class TelegramBot:
             self._send_text(text)
 
     def send_menu(self) -> None:
-        """Send main menu with inline keyboard buttons."""
-        # ... existing code ...
+        """Send custom keyboard menu - alias for send_dashboard."""
+        self.send_dashboard()
 
     def send_dashboard(self) -> None:
-        """Alias for send_menu - sends the main dashboard menu."""
-        self.send_menu()
-        keyboard = {
-            "inline_keyboard": [
-                [
-                    {"text": "Status", "callback_data": "status"},
-                    {"text": "Open Trades", "callback_data": "open_trades"}
-                ],
-                [
-                    {"text": "Past Trades", "callback_data": "past_trades"},
-                    {"text": "AI Review", "callback_data": "ai_review"}
-                ],
-                [
-                    {"text": "Pause", "callback_data": "pause"},
-                    {"text": "Resume", "callback_data": "resume"}
-                ]
-            ]
-        }
-
+        """Send custom keyboard with all commands."""
+        import json
+        keyboard = self._get_custom_keyboard()
+        
         try:
-            import json
             r = requests.get(
                 f"{self.base}/sendMessage",
                 params={
                     "chat_id": self.chat_id,
-                    "text": "📊 <b>TradeMindIQ Bot Dashboard</b>\n\nSelect an option:",
+                    "text": "📊 <b>TradeMindIQ Control Center</b>\n\nSelect an option:",
                     "parse_mode": "HTML",
                     "reply_markup": json.dumps(keyboard)
                 },
@@ -282,13 +305,13 @@ class TelegramBot:
             )
             if self._tg_debug():
                 try:
-                    print("[TELEGRAM_DEBUG] send_menu status=", r.status_code, "resp=", r.text)
+                    print("[TELEGRAM_DEBUG] send_dashboard status=", r.status_code, "resp=", r.text)
                 except Exception:
                     pass
         except Exception as e:
             if self._tg_debug():
                 try:
-                    print("[TELEGRAM_DEBUG] send_menu exception=", repr(e))
+                    print("[TELEGRAM_DEBUG] send_dashboard exception=", repr(e))
                 except Exception:
                     pass
 
