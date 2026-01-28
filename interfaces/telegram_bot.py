@@ -146,6 +146,11 @@ class TelegramBot:
 
     def send_menu(self) -> None:
         """Send main menu with inline keyboard buttons."""
+        # ... existing code ...
+    
+    def send_dashboard(self) -> None:
+        """Alias for send_menu - sends the main dashboard menu."""
+        self.send_menu()
         keyboard = {
             "inline_keyboard": [
                 [
@@ -731,6 +736,75 @@ class TelegramBot:
             return
 
         self._send_text("Unknown command. Tap a menu button or use /status, /open, /closed, /stats.")
+
+    # --- Command + Button Router ---------------------------------
+    def _normalize_cmd(self, txt: str) -> str:
+        return (txt or "").strip().lower()
+
+    def _route_text(self, txt: str) -> None:
+        """Handles: typed commands, reply-keyboard taps, slash commands."""
+        t = (txt or "").strip()
+        if not t:
+            return
+        
+        # strip leading slash
+        if t.startswith("/"):
+            t = t[1:]
+        
+        key = self._normalize_cmd(t)
+        
+        routes = {
+            "trademindiq": self.send_menu,
+            "menu": self.send_menu,
+            "dashboard": self.send_menu,
+            "status": self._send_status_with_menu,
+            "past trades": self._send_recent_trades_with_menu,
+            "open trades": self._send_open_trades_with_menu,
+            "stats": self._send_stats,
+            "ai review": lambda: self._send_text_with_menu("AI Review: will appear on each signal + post-trade."),
+            "ai optimize": lambda: self._send_text_with_menu("AI Optimize: post-trade parameter suggestions."),
+            "daily summary": lambda: self._send_text_with_menu("Daily Summary: not yet implemented."),
+            "weekly summary": lambda: self._send_text_with_menu("Weekly Summary: not yet implemented."),
+            "mode: paper": lambda: self._send_text_with_menu("Mode: PAPER (use /paper or Mode: LIVE to switch)"),
+            "mode: live": lambda: self._send_text_with_menu("Mode: LIVE (use /confirm live to arm)"),
+            "strict": self._send_status_with_menu,
+            "loose": self._send_status_with_menu,
+            "pause": lambda: self._handle_pause(),
+            "resume": lambda: self._handle_resume(),
+        }
+        
+        fn = routes.get(key)
+        if not fn:
+            self._send_text_with_menu(f"Unknown command: {t}\nType: /trademindiq for menu")
+            return
+        fn()
+    
+    def _route_callback(self, data: str) -> None:
+        """Handle inline keyboard callbacks."""
+        key = self._normalize_cmd(data)
+        
+        routes = {
+            "status": self._send_status_with_menu,
+            "open_trades": self._send_open_trades_with_menu,
+            "past_trades": self._send_recent_trades_with_menu,
+            "ai_review": lambda: self._send_text_with_menu("AI Review: will appear on each signal + post-trade."),
+            "pause": self._handle_pause,
+            "resume": self._handle_resume,
+        }
+        
+        fn = routes.get(key)
+        if not fn:
+            self._send_text_with_menu(f"Unknown button: {data}")
+            return
+        fn()
+    
+    def _handle_pause(self) -> None:
+        self._paused = True
+        self._send_text_with_menu("⏸️ Scanner alerts paused.")
+    
+    def _handle_resume(self) -> None:
+        self._paused = False
+        self._send_text_with_menu("▶️ Scanner alerts resumed.")
 
     def handle_dashboard_callback(self, call_data: str) -> None:
         """Handle callback queries from inline keyboards."""
