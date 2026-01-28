@@ -101,18 +101,72 @@ class TelegramBot:
         return {
             "inline_keyboard": [
                 [
-                    {"text": "Status", "callback_data": "status"},
-                    {"text": "Open Trades", "callback_data": "open_trades"}
+                    {"text": "📊 Stats", "switch_inline_query": "/stats"},
+                    {"text": "📜 Past Trades", "switch_inline_query": "/past trades"}
                 ],
                 [
-                    {"text": "Past Trades", "callback_data": "past_trades"},
-                    {"text": "AI Review", "callback_data": "ai_review"}
+                    {"text": "📌 Open Trades", "switch_inline_query": "/open trades"},
+                    {"text": "🧠 AI Review", "switch_inline_query": "/ai review"}
                 ],
                 [
-                    {"text": "Pause", "callback_data": "pause"},
-                    {"text": "Resume", "callback_data": "resume"}
+                    {"text": "⚙️ AI Optimize", "switch_inline_query": "/ai optimize"},
+                    {"text": "🗓️ Daily", "switch_inline_query": "/daily"}
+                ],
+                [
+                    {"text": "📆 Weekly", "switch_inline_query": "/weekly"},
+                    {"text": "📋 Paper", "switch_inline_query": "/paper"}
+                ],
+                [
+                    {"text": "🚀 Live", "switch_inline_query": "/live"},
+                    {"text": "🎯 Strict", "switch_inline_query": "/strict"}
+                ],
+                [
+                    {"text": "🔓 Loose", "switch_inline_query": "/loose"},
+                    {"text": "📈 Ticker", "switch_inline_query": "/ticker"}
+                ],
+                [
+                    {"text": "🟢 Buy", "switch_inline_query": "/one-tap buy"},
+                    {"text": "🔴 Sell", "switch_inline_query": "/one-tap sell"}
+                ],
+                [
+                    {"text": "⏸️ Pause", "switch_inline_query": "/pause"},
+                    {"text": "▶️ Resume", "switch_inline_query": "/resume"}
+                ],
+                [
+                    {"text": "🤖 Status", "switch_inline_query": "/status"},
+                    {"text": "🏠 Menu", "switch_inline_query": "/trademindiq"}
                 ]
             ]
+        }
+    
+    def _get_routes(self) -> dict:
+        """Return all command routes for text and callback routing."""
+        return {
+            "trademindiq": self.send_dashboard,
+            "menu": self.send_dashboard,
+            "dashboard": self.send_dashboard,
+            "status": self.send_status,
+            "past trades": self.send_past_trades,
+            "open trades": self.send_open_trades,
+            "stats": self.send_stats,
+            "ai review": self.send_ai_review,
+            "ai optimize": self.send_ai_optimize,
+            "daily": self.send_daily_summary,
+            "daily summary": self.send_daily_summary,
+            "weekly": self.send_weekly_summary,
+            "weekly summary": self.send_weekly_summary,
+            "paper": lambda: self.set_mode("paper"),
+            "live": lambda: self.set_mode("live"),
+            "mode paper": lambda: self.set_mode("paper"),
+            "mode live": lambda: self.set_mode("live"),
+            "strict": lambda: self.set_strictness("strict"),
+            "loose": lambda: self.set_strictness("loose"),
+            "ticker": self.start_live_ticker,
+            "price": self.start_live_ticker,
+            "one-tap buy": self.one_tap_buy,
+            "one-tap sell": self.one_tap_sell,
+            "pause": self.pause_scanner,
+            "resume": self.resume_scanner,
         }
 
     def _send_text_with_menu(self, text: str) -> None:
@@ -753,34 +807,7 @@ class TelegramBot:
         
         key = self._normalize_cmd(t)
         
-        routes = {
-            "trademindiq": self.send_dashboard,
-            "menu": self.send_dashboard,
-            "dashboard": self.send_dashboard,
-            "status": self.send_status,
-            "past trades": self.send_past_trades,
-            "open trades": self.send_open_trades,
-            "stats": self.send_stats,
-            "ai review": self.send_ai_review,
-            "ai optimize": self.send_ai_optimize,
-            "daily": self.send_daily_summary,
-            "daily summary": self.send_daily_summary,
-            "weekly": self.send_weekly_summary,
-            "weekly summary": self.send_weekly_summary,
-            "paper": lambda: self.set_mode("paper"),
-            "live": lambda: self.set_mode("live"),
-            "mode paper": lambda: self.set_mode("paper"),
-            "mode live": lambda: self.set_mode("live"),
-            "strict": lambda: self.set_strictness("strict"),
-            "loose": lambda: self.set_strictness("loose"),
-            "ticker": self.start_live_ticker,
-            "price": self.start_live_ticker,
-            "one-tap buy": self.one_tap_buy,
-            "one-tap sell": self.one_tap_sell,
-            "pause": self.pause_scanner,
-            "resume": self.resume_scanner,
-        }
-        
+        routes = self._get_routes()
         fn = routes.get(key)
         if not fn:
             self._send_text_with_menu(f"Unknown command: {t}\nType: /trademindiq for menu")
@@ -791,15 +818,7 @@ class TelegramBot:
         """Handle inline keyboard callbacks."""
         key = self._normalize_cmd(data)
         
-        routes = {
-            "status": self.send_status,
-            "open_trades": self.send_open_trades,
-            "past_trades": self.send_past_trades,
-            "ai_review": self.send_ai_review,
-            "pause": self.pause_scanner,
-            "resume": self.resume_scanner,
-        }
-        
+        routes = self._get_routes()
         fn = routes.get(key)
         if not fn:
             self._send_text_with_menu(f"Unknown button: {data}")
