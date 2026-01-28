@@ -48,3 +48,29 @@ class TradeRepository:
             trade.exit_reason,
         ))
         self.conn.commit()
+    
+    def get_recent_trades(self, limit: int = 5):
+        """Get recent closed trades."""
+        try:
+            cur = self.conn.cursor()
+            cur.execute("SELECT * FROM trades WHERE closed_at IS NOT NULL ORDER BY closed_at DESC LIMIT ?", (limit,))
+            rows = cur.fetchall()
+            if not rows:
+                return []
+            columns = [desc[0] for desc in cur.description]
+            return [dict(zip(columns, row)) for row in rows]
+        except Exception:
+            return []
+    
+    def get_summary_stats(self) -> dict:
+        """Get summary statistics."""
+        try:
+            cur = self.conn.cursor()
+            cur.execute("SELECT COUNT(*) as count, SUM(pnl) as total_pnl FROM trades WHERE closed_at IS NOT NULL")
+            row = cur.fetchone()
+            return {
+                "total_trades": row[0] or 0,
+                "total_pnl": row[1] or 0.0
+            }
+        except Exception:
+            return {"total_trades": 0, "total_pnl": 0.0}

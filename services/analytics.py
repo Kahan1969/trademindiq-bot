@@ -75,10 +75,51 @@ class PerformanceAnalytics:
             db_path: Path to trades.db (relative or absolute)
         """
         self.db_path = db_path
+        self._db_exists = False
+        self._check_db_exists()
+    
+    def _check_db_exists(self) -> bool:
+        """Check if database file exists and is valid."""
+        try:
+            import os
+            if os.path.exists(self.db_path):
+                conn = sqlite3.connect(self.db_path)
+                cursor = conn.cursor()
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='trades'")
+                if cursor.fetchone():
+                    self._db_exists = True
+                conn.close()
+        except Exception:
+            self._db_exists = False
+        return self._db_exists
     
     def _connect(self) -> sqlite3.Connection:
         """Create database connection."""
+        import os
+        if not os.path.exists(self.db_path):
+            # Create a temporary in-memory database for demo purposes
+            conn = sqlite3.connect(":memory:")
+            self._create_demo_schema(conn)
+            return conn
         return sqlite3.connect(self.db_path)
+    
+    def _create_demo_schema(self, conn) -> None:
+        """Create demo schema and sample data for when DB doesn't exist."""
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS trades (
+                id INTEGER PRIMARY KEY,
+                symbol TEXT,
+                side TEXT,
+                entry REAL,
+                exit_price REAL,
+                pnl REAL,
+                entry_time TIMESTAMP,
+                closed_at TIMESTAMP,
+                exit_reason TEXT
+            )
+        """)
+        conn.commit()
     
     def _row_to_trade(self, row: tuple, columns: List[str]) -> TradeMetrics:
         """Convert database row to TradeMetrics object."""
@@ -118,42 +159,57 @@ class PerformanceAnalytics:
     
     def get_all_trades(self) -> List[TradeMetrics]:
         """Fetch all closed trades from database."""
-        conn = self._connect()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM trades WHERE closed_at IS NOT NULL ORDER BY closed_at DESC")
-        rows = cursor.fetchall()
-        columns = [desc[0] for desc in cursor.description]
-        conn.close()
-        
-        return [self._row_to_trade(row, columns) for row in rows]
+        try:
+            conn = self._connect()
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM trades WHERE closed_at IS NOT NULL ORDER BY closed_at DESC")
+            rows = cursor.fetchall()
+            if not rows:
+                conn.close()
+                return []
+            columns = [desc[0] for desc in cursor.description]
+            conn.close()
+            return [self._row_to_trade(row, columns) for row in rows]
+        except Exception:
+            return []
     
     def get_trades_by_date(self, start_date: datetime, end_date: datetime) -> List[TradeMetrics]:
         """Get trades within a date range."""
-        conn = self._connect()
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT * FROM trades WHERE closed_at BETWEEN ? AND ? ORDER BY closed_at DESC",
-            (start_date.isoformat(), end_date.isoformat())
-        )
-        rows = cursor.fetchall()
-        columns = [desc[0] for desc in cursor.description]
-        conn.close()
-        
-        return [self._row_to_trade(row, columns) for row in rows]
+        try:
+            conn = self._connect()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM trades WHERE closed_at BETWEEN ? AND ? ORDER BY closed_at DESC",
+                (start_date.isoformat(), end_date.isoformat())
+            )
+            rows = cursor.fetchall()
+            if not rows:
+                conn.close()
+                return []
+            columns = [desc[0] for desc in cursor.description]
+            conn.close()
+            return [self._row_to_trade(row, columns) for row in rows]
+        except Exception:
+            return []
     
     def get_trades_by_symbol(self, symbol: str) -> List[TradeMetrics]:
         """Get all trades for a specific symbol."""
-        conn = self._connect()
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT * FROM trades WHERE symbol = ? AND closed_at IS NOT NULL ORDER BY closed_at DESC",
-            (symbol,)
-        )
-        rows = cursor.fetchall()
-        columns = [desc[0] for desc in cursor.description]
-        conn.close()
-        
-        return [self._row_to_trade(row, columns) for row in rows]
+        try:
+            conn = self._connect()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM trades WHERE symbol = ? AND closed_at IS NOT NULL ORDER BY closed_at DESC",
+                (symbol,)
+            )
+            rows = cursor.fetchall()
+            if not rows:
+                conn.close()
+                return []
+            columns = [desc[0] for desc in cursor.description]
+            conn.close()
+            return [self._row_to_trade(row, columns) for row in rows]
+        except Exception:
+            return []
     
     def calculate_performance_summary(self, trades: Optional[List[TradeMetrics]] = None) -> PerformanceSummary:
         """Calculate overall performance metrics."""
