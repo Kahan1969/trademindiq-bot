@@ -333,12 +333,17 @@ async def main() -> None:
                 pass
 
             # fallbacks (avoid blank sections)
-            what_worked = (review.get("what_worked") or "(no notes)").strip()
-            what_failed = (review.get("what_failed") or "(no notes)").strip()
-            next_time = (review.get("next_time") or "(no notes)").strip()
+            def safe_str(val, default="(no notes)"):
+                if isinstance(val, list):
+                    return " ".join(str(v) for v in val) if val else default
+                return str(val).strip() if val else default
+            
+            what_worked = safe_str(review.get("what_worked"))
+            what_failed = safe_str(review.get("what_failed"))
+            next_time = safe_str(review.get("next_time"))
 
             symbol = getattr(trade, "symbol", review.get("symbol", ""))
-            result = (review.get("result") or getattr(trade, "result", "") or "").strip()
+            result = safe_str(review.get("result", getattr(trade, "result", "") or ""))
             pnl_val = float(review.get("pnl", getattr(trade, "realized_pnl", getattr(trade, "pnl", 0.0)) or 0.0) or 0.0)
             conf_val = int(review.get("confidence", 50) or 50)
             exit_reason = getattr(trade, "exit_reason", "")
