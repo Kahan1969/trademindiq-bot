@@ -1039,15 +1039,15 @@ class TelegramBot:
                         except Exception:
                             pass
                         
-                        # Handle the callback
-                        self.handle_dashboard_callback(call_data)
+                        # Handle the callback using router
+                        self._route_callback(call_data)
                     
-                    # Handle text messages
+                    # Handle text messages using router
                     elif "message" in update:
                         msg = update["message"]
                         text = msg.get("text", "")
                         if text:
-                            self.handle_command(text)
+                            self._route_text(text)
 
             except Exception as e:
                 if self._tg_debug():
